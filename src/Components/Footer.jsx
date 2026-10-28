@@ -1,0 +1,18 @@
+import { ArrowUp } from 'lucide-react'
+import React from 'react'
+
+const Footer = () => {
+  return (
+    <footer className="bg-card relative py-8 px-4 border-t border-border mt-12 pt-8 flex flex-wrap justify-between items-center">
+      <p className="text-sm text-muted-foreground">
+        &copy; { new Date().getFullYear() } Ayetderki.co . All rights reserved.
+        </p>
+
+        <a href="#hero" aria-label="Back to top" className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+            <ArrowUp size={20} />
+        </a>
+    </footer>
+  )
+}
+
+export default Footer
