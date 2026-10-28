@@ -7,42 +7,40 @@ export const StarBackground = () => {
       const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
-    
-        const storedTheme = localStorage.getItem("theme");
-        setIsDarkMode(storedTheme === "dark");
-
-        if (storedTheme === "dark") {
+    const applyTheme = () => {
+        const isDark = document.documentElement.classList.contains("dark");
+        setIsDarkMode(isDark);
+        if (isDark) {
             generateStars();
             generateSparkles();
+        } else {
+            setStars([]);
+            setSparkles([]);
         }
+    };
 
-        const handleResize = () => {
-            if (localStorage.getItem("theme") === "dark") {
-                generateStars();
-            }
-        };
+    // run once on mount, using the actual class
+    applyTheme();
 
-        window.addEventListener("resize", handleResize);
+    const handleResize = () => {
+        if (document.documentElement.classList.contains("dark")) {
+            generateStars();
+        }
+    };
+    window.addEventListener("resize", handleResize);
 
-        // Optional: listen to theme changes dynamically
-        const observer = new MutationObserver(() => {
-            const isDark = document.documentElement.classList.contains("dark");
-            setIsDarkMode(isDark);
-            if (isDark) {
-                generateStars();
-                generateSparkles();
-            } else {
-                setStars([]);
-                setSparkles([]);
-            }
-        });
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    // react to later theme changes
+    const observer = new MutationObserver(applyTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+    });
 
-        return () => {
-            window.removeEventListener("resize", handleResize);
-            observer.disconnect();
-        };
-    }, []);
+    return () => {
+        window.removeEventListener("resize", handleResize);
+        observer.disconnect();
+    };
+}, []);
 
 
     const generateStars = () => {
