@@ -4,6 +4,7 @@ import React from 'react'
 import emailjs from '@emailjs/browser'
 import { cn } from "@/lib/utils"
 import { useToast } from '@/hooks/use-toast'
+import ReCAPTCHA from "react-google-recaptcha"
 
 const ContactSection = () => {
 
@@ -11,9 +12,23 @@ const ContactSection = () => {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const formRef = React.useRef();
 
+    // adding reCAPTCHA security to the contact form, to avoid spam and bot submissions.
+    const recaptchaRef = React.useRef(null);
+    const [captchaToken, setCaptchaToken] = React.useState(null);
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        setIsSubmitting(true);
+
+        if (!captchaToken) {
+            toast({
+                title: "Please verify you're human",
+                description: "Tick the reCAPTCHA box before sending.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setIsSubmitting(true)
 
         emailjs.sendForm(
             import.meta.env.VITE_EMAILJS_SERVICE_ID,   // service ID
@@ -27,9 +42,13 @@ const ContactSection = () => {
                     description: "Thank you for reaching out. I will get back to you as soon as possible.",
                 });
                 formRef.current?.reset();
+                recaptchaRef.current?.reset();   // new line
+                setCaptchaToken(null);
             })
             .catch((error) => {
                 console.error("EmailJS error:", error);
+                recaptchaRef.current?.reset();
+                setCaptchaToken(null);
                 toast({
                     title: "Something went wrong",
                     description: "Please try again or email me directly.",
@@ -152,10 +171,20 @@ const ContactSection = () => {
                                 </label>
                                 <textarea id="message" name="message" rows={4} className="w-full p-3 rounded-md border border-input bg-background text-foreground focus:outline-hidden focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition-colors resize-none" placeholder="Ex. Hello, I'd like to know more about your services..." required />
                             </div>
+                            <div className="flex justify-center">
+                                <ReCAPTCHA
+                                    ref={recaptchaRef}
+                                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                                    onChange={setCaptchaToken}
+                                    onExpired={() => setCaptchaToken(null)}
+                                    theme={document.documentElement.classList.contains("dark") ? "dark" : "light"}
+                                />
+                            </div>
                             <button type="submit" className={cn("cosmic-button flex w-full items-center p-2 text-md md:text-lg justify-center gap-2",
-                                "bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-primary"
+                                "bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-primary",
+                                "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                             )}
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || !captchaToken}
                             >
                                 {isSubmitting ? (
                                     <>
